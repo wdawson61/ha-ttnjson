@@ -8,6 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
 from homeassistant.components import mqtt
 from homeassistant.core import callback
 
@@ -195,12 +196,14 @@ class TtnJsonConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "uplink_message/decoded_payload/battery:V"
         )
 
+        multiline = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True))
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({
                 vol.Required(CONF_EUI,    default=default_eui):    str,
                 vol.Required(CONF_TOPIC,  default=default_topic):  str,
-                vol.Required(CONF_VALUES, default=default_values): vol.All(str, vol.Length(min=3)),
+                vol.Required(CONF_VALUES, default=default_values): multiline,
             }),
             errors=errors,
         )
@@ -236,7 +239,7 @@ class TtnJsonConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="selects",
             data_schema=vol.Schema({
-                vol.Optional(CONF_SELECTS, default=default_selects): str,
+                vol.Optional(CONF_SELECTS, default=default_selects): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)),
             }),
             errors=errors,
             description_placeholders={
@@ -299,7 +302,7 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required(CONF_TOPIC,  default=current.get(CONF_TOPIC,  "")): str,
-                vol.Required(CONF_VALUES, default=_values_to_text(current.get(CONF_VALUES, {}))): str,
+                vol.Required(CONF_VALUES, default=_values_to_text(current.get(CONF_VALUES, {}))): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)),
             }),
             errors=errors,
         )
@@ -328,7 +331,7 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_SELECTS,
                     default=_selects_to_text(current_selects),
-                ): str,
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT, multiline=True)),
             }),
             errors=errors,
         )
