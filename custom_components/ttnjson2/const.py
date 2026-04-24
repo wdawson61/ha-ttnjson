@@ -1,6 +1,6 @@
 """Constants for the TTN JSON integration."""
 
-DOMAIN = "ttnjson"
+DOMAIN = "ttnjson2"
 
 CONF_EUI      = "eui"
 CONF_TOPIC    = "topic"

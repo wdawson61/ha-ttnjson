@@ -25,7 +25,7 @@ A Home Assistant custom integration that subscribes to The Things Network (TTN) 
 
 ### Manual
 
-Copy the `custom_components/ttnjson` folder into your HA `config/custom_components/` directory and restart.
+Copy the `custom_components/ttnjson2` folder into your HA `config/custom_components/` directory and restart.
 
 ---
 
@@ -86,7 +86,7 @@ Existing `configuration.yaml` entries are automatically imported into the config
 
 ```yaml
 sensor:
-  - platform: ttnjson
+  - platform: ttnjson2
     eui: my-tracker-001
     topic: v3/my-app@ttn/devices/<EUI>/up
     values:
@@ -122,7 +122,7 @@ function decodeUplink(input) {
 **No sensor values after setup:**
 - Check the MQTT integration is connected (Developer Tools → MQTT → Listen to a topic and subscribe to your TTN topic manually to verify messages are arriving)
 - Verify your TTN application has a payload formatter configured and `decoded_payload` is populated in the TTN live data view
-- Check HA logs (Settings → System → Logs) for `ttnjson` warnings
+- Check HA logs (Settings → System → Logs) for `ttnjson2` warnings
 
 **Sensors created but always unavailable:**
 - The field path may be wrong — check the exact JSON structure in the TTN live data console and adjust your slash-delimited path accordingly
