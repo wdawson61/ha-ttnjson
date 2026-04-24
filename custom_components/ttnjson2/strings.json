@@ -2,32 +2,53 @@
   "config": {
     "step": {
       "user": {
-        "title": "TTN JSON — Device & Sensors",
-        "description": "Configure uplink topic and sensor fields. Use `<EUI>` in the topic as a placeholder for the device ID.",
+        "title": "TTN JSON — Device",
+        "description": "Enter your TTN device ID and uplink MQTT topic. Use `<EUI>` as a placeholder for the device ID in the topic.",
         "data": {
-          "eui":    "Device EUI / ID (e.g. my-tracker-001)",
-          "topic":  "Uplink MQTT topic (e.g. v3/my-app@ttn/devices/<EUI>/up)",
-          "values": "Sensor fields — one per line as  path/to/field:unit"
+          "eui":   "Device EUI / ID (e.g. my-tracker-001)",
+          "topic": "Uplink MQTT topic (e.g. v3/my-app@ttn/devices/<EUI>/up)"
         }
+      },
+      "listen": {
+        "title": "TTN JSON — Waiting for a Message",
+        "description": "Listening on:\n`{topic}`\n\nTrigger an uplink from **{eui}** now (send a message, press a button, etc.), then check the box and click Submit.",
+        "data": {
+          "ready": "I've triggered an uplink from the device"
+        }
+      },
+      "pick_fields": {
+        "title": "TTN JSON — Select Fields",
+        "description": "Found {count} fields in the uplink payload. Select the ones you want as Home Assistant sensor entities.",
+        "data": {
+          "fields": "Fields to expose as sensors"
+        }
+      },
+      "assign_units": {
+        "title": "TTN JSON — Assign Units",
+        "description": "Assign a unit of measurement to each selected field. Units have been pre-filled where recognised — edit as needed.\n\n{fields}",
+        "data": {}
       },
       "selects": {
         "title": "TTN JSON — Mode Select Entities (optional)",
-        "description": "Add select entities for {eui} to send uint8 mode commands as downlinks.\n\nFormat — one block per select, separated by a blank line:\n\n  name=mode\n  f_port=1\n  state_path=uplink_message/decoded_payload/mode\n  AUTO:0\n  STOW:1\n\nLeave blank if no select entities are needed.",
+        "description": "Add select entities for **{eui}** to send uint8 mode commands as downlinks.\n\nFormat — one block per select, separated by a blank line:\n\n  name=mode\n  f_port=1\n  state_path=uplink_message/decoded_payload/mode\n  AUTO:0\n  STOW:1\n\nLeave blank to skip.",
         "data": {
           "selects": "Select entity definitions"
         }
       }
     },
     "error": {
-      "mqtt_unavailable": "MQTT integration is not available. Please configure MQTT first.",
-      "bad_values":       "Could not parse sensor fields. Use  path/to/field:unit  one per line.",
-      "empty_values":     "At least one sensor field is required.",
-      "duplicate_eui":    "A device with this EUI is already configured.",
-      "bad_selects":      "Could not parse select definitions. Check the format shown in the description."
+      "mqtt_unavailable":  "MQTT integration is not available. Please configure MQTT first.",
+      "no_message":        "No message received yet. Trigger an uplink from the device and try again.",
+      "empty_payload":     "Message received but no fields could be extracted. Check your TTN payload formatter.",
+      "no_fields_selected":"Please select at least one field.",
+      "bad_values":        "Could not parse sensor fields. Use  path/to/field:unit  one per line.",
+      "empty_values":      "At least one sensor field is required.",
+      "duplicate_eui":     "A device with this EUI is already configured.",
+      "bad_selects":       "Could not parse select definitions. Check the format shown in the description."
     },
     "abort": {
-      "mqtt_unavailable":     "MQTT integration is not available.",
-      "already_configured":   "This device EUI is already configured."
+      "mqtt_unavailable":  "MQTT integration is not available.",
+      "already_configured":"This device EUI is already configured."
     }
   },
   "options": {
