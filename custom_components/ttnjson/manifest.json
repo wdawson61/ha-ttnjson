@@ -1,0 +1,10 @@
+{
+  "domain": "ttnjson",
+  "name": "TTN JSON",
+  "codeowners": ["@wdawson61"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://github.com/wdawson61/ha-ttnjson",
+  "iot_class": "local_push",
+  "version": "0.3.0"
+}

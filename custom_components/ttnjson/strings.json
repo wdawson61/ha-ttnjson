@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TTN JSON — Device & Sensors",
+        "description": "Configure uplink topic and sensor fields. Use `<EUI>` in the topic as a placeholder for the device ID.",
+        "data": {
+          "eui":    "Device EUI / ID (e.g. my-tracker-001)",
+          "topic":  "Uplink MQTT topic (e.g. v3/my-app@ttn/devices/<EUI>/up)",
+          "values": "Sensor fields — one per line as  path/to/field:unit"
+        }
+      },
+      "selects": {
+        "title": "TTN JSON — Mode Select Entities (optional)",
+        "description": "Add select entities for {eui} to send uint8 mode commands as downlinks.\n\nFormat — one block per select, separated by a blank line:\n\n  name=mode\n  f_port=1\n  state_path=uplink_message/decoded_payload/mode\n  AUTO:0\n  STOW:1\n\nLeave blank if no select entities are needed.",
+        "data": {
+          "selects": "Select entity definitions"
+        }
+      }
+    },
+    "error": {
+      "mqtt_unavailable": "MQTT integration is not available. Please configure MQTT first.",
+      "bad_values":       "Could not parse sensor fields. Use  path/to/field:unit  one per line.",
+      "empty_values":     "At least one sensor field is required.",
+      "duplicate_eui":    "A device with this EUI is already configured.",
+      "bad_selects":      "Could not parse select definitions. Check the format shown in the description."
+    },
+    "abort": {
+      "mqtt_unavailable":     "MQTT integration is not available.",
+      "already_configured":   "This device EUI is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "TTN JSON — Edit Sensors",
+        "data": {
+          "topic":  "Uplink MQTT topic",
+          "values": "Sensor fields (path/to/field:unit, one per line)"
+        }
+      },
+      "selects": {
+        "title": "TTN JSON — Edit Select Entities",
+        "data": {
+          "selects": "Select entity definitions (leave blank to remove all)"
+        }
+      }
+    },
+    "error": {
+      "bad_values":   "Could not parse sensor fields. Use  path/to/field:unit  one per line.",
+      "empty_values": "At least one sensor field is required.",
+      "bad_selects":  "Could not parse select definitions. Check the format shown in the description."
+    }
+  }
+}
