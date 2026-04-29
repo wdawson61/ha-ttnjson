@@ -70,7 +70,6 @@ async def async_setup_entry(
     async_add_entities(entities, update_before_add=True)
 
     # Subscribe once per entry — fan out to all select entities on this device
-    @callback
     async def async_message_received(msg):
         try:
             data = json.loads(msg.payload)

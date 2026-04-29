@@ -184,6 +184,8 @@ async def async_setup_entry(
                 sensor.do_update(value)
             except (KeyError, IndexError, TypeError) as err:
                 _LOGGER.warning("TTN JSON: failed to nav %s: %s", path, err)
+            except Exception as err:
+                _LOGGER.error("TTN JSON: error updating %s: %s", path, err)
 
     await mqtt.async_subscribe(hass, topic, async_message_received, qos=0)
     _LOGGER.debug("TTN JSON: subscribed to %s for %s", topic, eui)
@@ -267,8 +269,10 @@ class TtnJsonSensor(SensorEntity):
         return self._state
 
     @property
-    def native_unit_of_measurement(self) -> str:
-        return self._unit
+    def native_unit_of_measurement(self) -> str | None:
+        """Return None for non-numeric fields — empty string causes HA to
+        infer numeric type and reject string values like 'AUTO' or 'False'."""
+        return self._unit if self._unit else None
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -283,4 +287,9 @@ class TtnJsonSensor(SensorEntity):
         """Set state directly from a pre-navigated value."""
         self._state   = value
         self._updated = dt_util.utcnow()
+        _LOGGER.debug(
+            "TTN JSON: do_update %s = %r (type=%s, hass=%s)",
+            self._mqtt_key, value, type(value).__name__,
+            self.hass is not None if hasattr(self, "hass") else "no_hass_attr",
+        )
         self.async_write_ha_state()

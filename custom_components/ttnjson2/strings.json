@@ -15,12 +15,20 @@
         "data": {
           "selects": "Select entity definitions"
         }
+      },
+      "buttons": {
+        "title": "TTN JSON — Button Entities (optional)",
+        "description": "Add button entities for **{eui}** to send one-shot downlink commands.\n\nOne block per button, separated by a blank line:\n\n  name=clear_fault\n  f_port=1\n  payload=10\n\npayload is a hex byte string (e.g. 10 or FF). Leave blank to skip.",
+        "data": {
+          "buttons": "Button entity definitions"
+        }
       }
     },
     "error": {
       "mqtt_unavailable": "MQTT integration is not available. Please configure MQTT first.",
       "duplicate_eui":    "A device with this EUI is already configured.",
-      "bad_selects":      "Could not parse select definitions. Check the format shown above."
+      "bad_selects":      "Could not parse select definitions. Check the format shown above.",
+      "bad_buttons":      "Could not parse button definitions. Check name=, f_port=, and payload= fields."
     },
     "abort": {
       "mqtt_unavailable":   "MQTT integration is not available.",
@@ -30,7 +38,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "TTN JSON — Edit Device",
+        "title": "TTN JSON — Edit Device"
+      },
+      "sensors": {
+        "title": "TTN JSON — Edit Sensors",
         "description": "{hint}",
         "data": {
           "topic": "Uplink MQTT topic",
@@ -42,10 +53,17 @@
         "data": {
           "selects": "Select entity definitions (leave blank to remove all)"
         }
+      },
+      "buttons": {
+        "title": "TTN JSON — Edit Button Entities",
+        "data": {
+          "buttons": "Button entity definitions (leave blank to remove all)"
+        }
       }
     },
     "error": {
-      "bad_selects": "Could not parse select definitions. Check the format shown above."
+      "bad_selects": "Could not parse select definitions. Check the format shown above.",
+      "bad_buttons": "Could not parse button definitions. Check name=, f_port=, and payload= fields."
     }
   }
 }

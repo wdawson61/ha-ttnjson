@@ -4,12 +4,14 @@ DOMAIN = "ttnjson2"
 
 CONF_EUI        = "eui"
 CONF_TOPIC      = "topic"
-CONF_VALUES     = "values"       # dict of discovered path → unit (persisted after first message)
+CONF_VALUES     = "values"
 CONF_SELECTS    = "selects"
+CONF_BUTTONS    = "buttons"
 CONF_NAME       = "name"
 CONF_F_PORT     = "f_port"
 CONF_MAP        = "map"
 CONF_STATE_PATH = "state_path"
+CONF_PAYLOAD    = "payload"     # hex string for button downlink
 
 DEFAULT_F_PORT  = 1
 
@@ -29,13 +31,16 @@ UNIT_GUESSES = {
     "temp":        "°F",
     "humidity":    "%",
     "pressure":    "hPa",
-    "elevation":   "°",
+    "az_deg":      "°",
+    "el_deg":      "°",
     "azimuth":     "°",
+    "elevation":   "°",
     "altitude":    "m",
     "speed":       "mph",
     "current":     "A",
     "power":       "W",
     "pulse":       "mV",
+    "dbm":         "dBm",
     "mode":        "",
     "fault":       "",
 }

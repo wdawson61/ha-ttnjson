@@ -17,10 +17,12 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_BUTTONS,
     CONF_EUI,
     CONF_F_PORT,
     CONF_MAP,
     CONF_NAME,
+    CONF_PAYLOAD,
     CONF_SELECTS,
     CONF_STATE_PATH,
     CONF_TOPIC,
@@ -106,6 +108,61 @@ def _selects_to_text(selects: list[dict]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Helpers — buttons
+# ---------------------------------------------------------------------------
+
+def _parse_buttons_text(text: str) -> list[dict] | None:
+    """Parse button block text into a list of button configs.
+
+    Format — one block per button, separated by a blank line:
+        name=clear_fault
+        f_port=1
+        payload=10
+
+    payload is a hex byte string (with or without 0x prefix).
+    """
+    if not text.strip():
+        return []
+
+    buttons = []
+    for block in text.strip().split("\n\n"):
+        lines = [l.strip() for l in block.splitlines() if l.strip()]
+        cfg: dict = {}
+        for line in lines:
+            if line.startswith("name="):
+                cfg[CONF_NAME] = line[5:].strip()
+            elif line.startswith("f_port="):
+                try:
+                    cfg[CONF_F_PORT] = int(line[7:].strip())
+                except ValueError:
+                    return None
+            elif line.startswith("payload="):
+                hex_val = line[8:].strip().replace("0x", "").replace("0X", "")
+                try:
+                    bytes.fromhex(hex_val)   # validate
+                except ValueError:
+                    return None
+                cfg[CONF_PAYLOAD] = hex_val
+        if not cfg.get(CONF_NAME) or not cfg.get(CONF_PAYLOAD):
+            return None
+        cfg.setdefault(CONF_F_PORT, DEFAULT_F_PORT)
+        buttons.append(cfg)
+    return buttons
+
+
+def _buttons_to_text(buttons: list[dict]) -> str:
+    blocks = []
+    for b in buttons:
+        lines = [
+            f"name={b[CONF_NAME]}",
+            f"f_port={b.get(CONF_F_PORT, DEFAULT_F_PORT)}",
+            f"payload={b[CONF_PAYLOAD]}",
+        ]
+        blocks.append("\n".join(lines))
+    return "\n\n".join(blocks)
+
+
+# ---------------------------------------------------------------------------
 # Config flow
 # ---------------------------------------------------------------------------
 
@@ -165,10 +222,7 @@ class TtnJsonConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_SELECTS] = "bad_selects"
             else:
                 self._data[CONF_SELECTS] = selects
-                return self.async_create_entry(
-                    title=f"TTN — {self._data[CONF_EUI]}",
-                    data=self._data,
-                )
+                return await self.async_step_buttons()
 
         default_selects = (
             "name=mode\n"
@@ -184,6 +238,43 @@ class TtnJsonConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="selects",
             data_schema=vol.Schema({
                 vol.Optional(CONF_SELECTS, default=default_selects): _MULTILINE,
+            }),
+            errors=errors,
+            description_placeholders={"eui": self._data[CONF_EUI]},
+        )
+
+    # ------------------------------------------------------------------
+    # Step 3 — Optional button entities
+    # ------------------------------------------------------------------
+    async def async_step_buttons(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            buttons = _parse_buttons_text(user_input.get(CONF_BUTTONS, ""))
+            if buttons is None:
+                errors[CONF_BUTTONS] = "bad_buttons"
+            else:
+                self._data[CONF_BUTTONS] = buttons
+                return self.async_create_entry(
+                    title=f"TTN — {self._data[CONF_EUI]}",
+                    data=self._data,
+                )
+
+        default_buttons = (
+            "name=clear_fault\n"
+            "f_port=1\n"
+            "payload=10\n\n"
+            "name=reboot\n"
+            "f_port=1\n"
+            "payload=FF"
+        )
+
+        return self.async_show_form(
+            step_id="buttons",
+            data_schema=vol.Schema({
+                vol.Optional(CONF_BUTTONS, default=default_buttons): _MULTILINE,
             }),
             errors=errors,
             description_placeholders={"eui": self._data[CONF_EUI]},
@@ -223,6 +314,12 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.FlowResult:
+        """HA calls this first — immediately delegate to the sensors step."""
+        return await self.async_step_sensors()
+
+    async def async_step_sensors(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
         """Edit topic and unit overrides for discovered sensors."""
         errors: dict[str, str] = {}
         current = self._config_entry.data
@@ -242,7 +339,6 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
                 if not line or ":" not in line:
                     continue
                 name, _, unit = line.rpartition(":")
-                # Find the matching full path
                 for path in current_values:
                     if path.split("/")[-1] == name.strip():
                         new_units[path] = unit.strip()
@@ -256,7 +352,7 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
             return await self.async_step_selects()
 
         return self.async_show_form(
-            step_id="init",
+            step_id="sensors",
             data_schema=vol.Schema({
                 vol.Required(CONF_TOPIC, default=current.get(CONF_TOPIC, "")): str,
                 vol.Optional("units", default=values_text): _MULTILINE,
@@ -279,11 +375,8 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
             if selects is None:
                 errors[CONF_SELECTS] = "bad_selects"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self._config_entry,
-                    data={**self._updated, CONF_SELECTS: selects},
-                )
-                return self.async_create_entry(title="", data={})
+                self._updated[CONF_SELECTS] = selects
+                return await self.async_step_buttons()
 
         return self.async_show_form(
             step_id="selects",
@@ -291,6 +384,35 @@ class TtnJsonOptionsFlow(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_SELECTS,
                     default=_selects_to_text(current_selects),
+                ): _MULTILINE,
+            }),
+            errors=errors,
+        )
+
+    async def async_step_buttons(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        """Edit button entities."""
+        errors: dict[str, str] = {}
+        current_buttons = self._config_entry.data.get(CONF_BUTTONS, [])
+
+        if user_input is not None:
+            buttons = _parse_buttons_text(user_input.get(CONF_BUTTONS, ""))
+            if buttons is None:
+                errors[CONF_BUTTONS] = "bad_buttons"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry,
+                    data={**self._updated, CONF_BUTTONS: buttons},
+                )
+                return self.async_create_entry(title="", data={})
+
+        return self.async_show_form(
+            step_id="buttons",
+            data_schema=vol.Schema({
+                vol.Optional(
+                    CONF_BUTTONS,
+                    default=_buttons_to_text(current_buttons),
                 ): _MULTILINE,
             }),
             errors=errors,

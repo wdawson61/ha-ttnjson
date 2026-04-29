@@ -6,5 +6,5 @@
   "dependencies": ["mqtt"],
   "documentation": "https://github.com/wdawson61/ha-ttnjson2",
   "iot_class": "local_push",
-  "version": "0.5.0"
+  "version": "0.5.1"
 }

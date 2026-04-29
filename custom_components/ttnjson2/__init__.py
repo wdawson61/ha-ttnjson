@@ -12,7 +12,7 @@ from .const import CONF_EUI, CONF_SELECTS, CONF_TOPIC, CONF_VALUES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "select"]
+PLATFORMS = ["sensor", "select", "button"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
